@@ -25,7 +25,8 @@ class ROICalculationRequest(BaseModel):
     crm_automation_percentage: float = 50.0
     team_members: int = 3
     hourly_cost_ars: int = 5000
-    bitrix24_annual_cost: int = 200000
+    bitrix24_plan: str = "Standard Plan"
+    monthly_price_usd: int = 99
     implementation_cost: int = 1000000
     # Optional fields for revenue calculation
     average_ticket_ars: Optional[int] = None
@@ -35,6 +36,10 @@ class ROICalculationRequest(BaseModel):
 class ROICalculationResponse(BaseModel):
     # Input summary
     inputs: dict
+    # Plan details
+    selected_plan: str
+    monthly_price_usd: int
+    annual_license_cost_usd: int
     # Calculations
     chatbot_monthly_hours_saved: float
     chatbot_annual_savings: float
@@ -53,6 +58,9 @@ class ROICalculationResponse(BaseModel):
 @app.post("/api/calculate-roi", response_model=ROICalculationResponse)
 async def calculate_roi(request: ROICalculationRequest):
     try:
+        # Calculate annual license cost from monthly price
+        annual_license_cost_usd = request.monthly_price_usd * 12
+        
         # Chatbot savings calculations
         chatbot_monthly_hours_saved = (
             request.monthly_inquiries * 
@@ -78,7 +86,9 @@ async def calculate_roi(request: ROICalculationRequest):
         
         # Total calculations
         total_annual_savings = chatbot_annual_savings + crm_annual_savings
-        total_investment = request.bitrix24_annual_cost + request.implementation_cost
+        # Convert USD license cost to ARS (approximate rate: 1 USD = 800 ARS as of 2024)
+        annual_license_cost_ars = annual_license_cost_usd * 800  # Using approximate USD to ARS rate
+        total_investment = annual_license_cost_ars + request.implementation_cost
         
         # ROI calculation
         roi_percentage = ((total_annual_savings - total_investment) / total_investment) * 100
@@ -112,12 +122,16 @@ async def calculate_roi(request: ROICalculationRequest):
                 "crm_automation_percentage": request.crm_automation_percentage,
                 "team_members": request.team_members,
                 "hourly_cost_ars": request.hourly_cost_ars,
-                "bitrix24_annual_cost": request.bitrix24_annual_cost,
+                "bitrix24_plan": request.bitrix24_plan,
+                "monthly_price_usd": request.monthly_price_usd,
                 "implementation_cost": request.implementation_cost,
                 "average_ticket_ars": request.average_ticket_ars,
                 "current_conversion_rate": request.current_conversion_rate,
                 "expected_conversion_rate": request.expected_conversion_rate,
             },
+            selected_plan=request.bitrix24_plan,
+            monthly_price_usd=request.monthly_price_usd,
+            annual_license_cost_usd=annual_license_cost_usd,
             chatbot_monthly_hours_saved=round(chatbot_monthly_hours_saved, 2),
             chatbot_annual_savings=round(chatbot_annual_savings, 2),
             crm_annual_hours_saved=round(crm_annual_hours_saved, 2),
@@ -137,6 +151,18 @@ async def calculate_roi(request: ROICalculationRequest):
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "message": "ROI Calculator API is running"}
+
+@app.get("/api/bitrix24-plans")
+async def get_bitrix24_plans():
+    """Get available Bitrix24 plans with pricing"""
+    return {
+        "plans": [
+            {"name": "Basic Plan", "monthly_price_usd": 49, "description": "Essential CRM features for small teams"},
+            {"name": "Standard Plan", "monthly_price_usd": 99, "description": "Advanced automation and reporting", "default": True},
+            {"name": "Professional Plan", "monthly_price_usd": 199, "description": "Complete business solution with integrations"},
+            {"name": "Enterprise Plan", "monthly_price_usd": 399, "description": "Full-scale enterprise solution with premium support"}
+        ]
+    }
 
 if __name__ == "__main__":
     import uvicorn

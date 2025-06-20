@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import './App.css';
 
 const App = () => {
+  // Bitrix24 plans data
+  const bitrix24Plans = [
+    { name: "Basic Plan", monthly_price_usd: 49, description: "Essential CRM features for small teams" },
+    { name: "Standard Plan", monthly_price_usd: 99, description: "Advanced automation and reporting" },
+    { name: "Professional Plan", monthly_price_usd: 199, description: "Complete business solution with integrations" },
+    { name: "Enterprise Plan", monthly_price_usd: 399, description: "Full-scale enterprise solution with premium support" }
+  ];
+
   const [formData, setFormData] = useState({
     monthly_inquiries: 1000,
     automation_percentage: 60,
@@ -10,7 +18,8 @@ const App = () => {
     crm_automation_percentage: 50,
     team_members: 3,
     hourly_cost_ars: 5000,
-    bitrix24_annual_cost: 200000,
+    bitrix24_plan: "Standard Plan",
+    monthly_price_usd: 99,
     implementation_cost: 1000000,
     average_ticket_ars: '',
     current_conversion_rate: '',
@@ -29,11 +38,32 @@ const App = () => {
     }));
   };
 
+  const handlePlanChange = (e) => {
+    const selectedPlanName = e.target.value;
+    const selectedPlan = bitrix24Plans.find(plan => plan.name === selectedPlanName);
+    
+    setFormData(prev => ({
+      ...prev,
+      bitrix24_plan: selectedPlanName,
+      monthly_price_usd: selectedPlan.monthly_price_usd
+    }));
+  };
+
   const formatCurrency = (amount) => {
     if (!amount) return 'ARS $0';
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatUSD = (amount) => {
+    if (!amount) return 'USD $0';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
@@ -81,6 +111,10 @@ const App = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getSelectedPlan = () => {
+    return bitrix24Plans.find(plan => plan.name === formData.bitrix24_plan);
   };
 
   return (
@@ -211,7 +245,7 @@ const App = () => {
               <div className="border-l-4 border-purple-500 pl-4">
                 <h3 className="font-medium text-gray-900 mb-4">Parámetros de Costo</h3>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Costo por hora empleado (ARS)
@@ -227,15 +261,30 @@ const App = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Licencia Bitrix24 anual (ARS)
+                      Plan Bitrix24
                     </label>
-                    <input
-                      type="number"
-                      name="bitrix24_annual_cost"
-                      value={formData.bitrix24_annual_cost}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <select
+                      name="bitrix24_plan"
+                      value={formData.bitrix24_plan}
+                      onChange={handlePlanChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      {bitrix24Plans.map((plan) => (
+                        <option key={plan.name} value={plan.name}>
+                          {plan.name} - {formatUSD(plan.monthly_price_usd)}/mes
+                        </option>
+                      ))}
+                    </select>
+                    <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                      <div className="text-sm">
+                        <div className="font-medium text-blue-900">Plan seleccionado: {formData.bitrix24_plan}</div>
+                        <div className="text-blue-700">Precio mensual: {formatUSD(formData.monthly_price_usd)}</div>
+                        <div className="text-blue-700">Costo anual: {formatUSD(formData.monthly_price_usd * 12)}</div>
+                        <div className="text-blue-600 text-xs mt-1">
+                          {getSelectedPlan()?.description}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -326,6 +375,22 @@ const App = () => {
               </div>
             ) : (
               <div className="space-y-6">
+                {/* Plan Selection Summary */}
+                <div className="bg-indigo-50 rounded-lg p-4">
+                  <h4 className="font-medium text-indigo-900 mb-2">Plan Bitrix24 Seleccionado</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <span className="text-indigo-700 font-medium">{results.selected_plan}</span>
+                    </div>
+                    <div>
+                      <span className="text-indigo-600">Mensual: {formatUSD(results.monthly_price_usd)}</span>
+                    </div>
+                    <div>
+                      <span className="text-indigo-600">Anual: {formatUSD(results.annual_license_cost_usd)}</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* ROI Summary */}
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
                   <div className="text-center">
@@ -350,6 +415,9 @@ const App = () => {
                     <h4 className="font-medium text-red-900 mb-2">Inversión Total</h4>
                     <div className="text-2xl font-bold text-red-600">
                       {formatCurrency(results.total_investment)}
+                    </div>
+                    <div className="text-sm text-red-700 mt-1">
+                      Implementación + Licencia anual ({formatUSD(results.annual_license_cost_usd)})
                     </div>
                   </div>
                 </div>
@@ -403,7 +471,7 @@ const App = () => {
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-gray-900">
-                        {Math.round(results.total_annual_savings / results.total_investment * 12)}
+                        {Math.max(1, Math.round(results.total_investment / Math.max(1, results.total_annual_savings) * 12))}
                       </div>
                       <div className="text-sm text-gray-600">Meses para recuperar inversión</div>
                     </div>
