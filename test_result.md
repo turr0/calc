@@ -119,6 +119,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Health check API test passed. The /api/health endpoint returns status 200 with the expected response format."
+      - working: true
+        agent: "testing"
+        comment: "Health check API test passed again with the updated backend code. The /api/health endpoint is still working correctly."
 
   - task: "Basic ROI Calculation API"
     implemented: true
@@ -134,6 +137,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Basic ROI calculation test passed. The API correctly calculates chatbot savings, CRM savings, total savings, total investment, and ROI percentage with the default Argentine SME values."
+      - working: true
+        agent: "testing"
+        comment: "ROI calculation with Standard Plan test passed. The API correctly handles the new Bitrix24 plan structure with monthly_price_usd and bitrix24_plan parameters. The total investment calculation now includes the converted ARS amount (annual_license_cost_usd * 800)."
 
   - task: "ROI Calculation with Revenue Parameters"
     implemented: true
@@ -149,6 +155,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "ROI calculation with revenue parameters test passed. The API correctly calculates additional annual revenue when average_ticket_ars, current_conversion_rate, and expected_conversion_rate are provided."
+      - working: true
+        agent: "testing"
+        comment: "ROI calculation with revenue parameters test passed with the new Bitrix24 plan structure. The API correctly calculates additional annual revenue and includes the new plan details in the response."
 
   - task: "Edge Cases for ROI Calculation"
     implemented: true
@@ -164,6 +173,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Edge cases test passed. The API correctly handles low automation percentages (10%), high automation percentages (90%), different team sizes (1, 5, 10), and different cost structures."
+      - working: true
+        agent: "testing"
+        comment: "Edge cases test passed with the new Bitrix24 plan structure. The API correctly handles different automation percentages and team sizes with the updated plan parameters."
 
   - task: "Mathematical Accuracy Validation"
     implemented: true
@@ -179,6 +191,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Mathematical accuracy validation test passed. The API calculations match the expected values for chatbot savings, CRM savings, total savings, total investment, ROI percentage, and total hours saved."
+      - working: true
+        agent: "testing"
+        comment: "Mathematical accuracy validation test passed with the new Bitrix24 plan structure. The annual license cost calculation (monthly_price_usd * 12) and total investment calculation (annual_license_cost_usd * 800 + implementation_cost) are correct."
 
   - task: "Error Handling for ROI Calculation"
     implemented: true
@@ -194,11 +209,29 @@ backend:
       - working: true
         agent: "testing"
         comment: "Error handling test passed. The API correctly handles negative values, missing required fields (using default values from the Pydantic model), and invalid data types (returning appropriate validation errors)."
+      - working: true
+        agent: "testing"
+        comment: "Error handling test passed with the new Bitrix24 plan structure. The API correctly uses the default values for bitrix24_plan (Standard Plan) and monthly_price_usd (99) when not provided."
+
+  - task: "Bitrix24 Plans Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the new /api/bitrix24-plans endpoint to ensure it returns the correct plan data"
+      - working: true
+        agent: "testing"
+        comment: "Bitrix24 plans endpoint test passed. The API correctly returns the four plans (Basic, Standard, Professional, Enterprise) with the correct pricing and marks Standard Plan as the default."
 
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: false
 
 test_plan:
@@ -209,6 +242,7 @@ test_plan:
     - "Mathematical Accuracy Validation"
     - "Edge Cases for ROI Calculation"
     - "Error Handling for ROI Calculation"
+    - "Bitrix24 Plans Endpoint"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -218,3 +252,5 @@ agent_communication:
     message: "Starting comprehensive testing of the ROI calculator backend API. Will test all endpoints and validation scenarios."
   - agent: "testing"
     message: "All backend API tests have passed successfully. The ROI calculator API is working correctly for all test scenarios including health check, basic ROI calculation, ROI calculation with revenue parameters, edge cases, mathematical accuracy validation, and error handling."
+  - agent: "testing"
+    message: "Completed testing of the updated ROI calculator backend API with the new Bitrix24 plan structure. All tests have passed successfully. The API correctly handles the new plan structure, calculates annual license costs, and includes the converted ARS amount in the total investment calculation. The /api/bitrix24-plans endpoint returns the correct plan data with the expected pricing."
