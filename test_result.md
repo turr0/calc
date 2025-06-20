@@ -101,3 +101,100 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Test the ROI calculator backend API with comprehensive scenarios"
+
+backend:
+  - task: "Health Check API"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the /api/health endpoint to ensure the API is running"
+
+  - task: "Basic ROI Calculation API"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test /api/calculate-roi with default Argentine SME values"
+
+  - task: "ROI Calculation with Revenue Parameters"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test with optional revenue fields"
+
+  - task: "Edge Cases for ROI Calculation"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test with various automation percentages and team sizes"
+
+  - task: "Mathematical Accuracy Validation"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to verify the mathematical accuracy of calculations"
+
+  - task: "Error Handling for ROI Calculation"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test with invalid data (negative numbers, missing required fields)"
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Health Check API"
+    - "Basic ROI Calculation API"
+    - "ROI Calculation with Revenue Parameters"
+    - "Mathematical Accuracy Validation"
+    - "Edge Cases for ROI Calculation"
+    - "Error Handling for ROI Calculation"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "Starting comprehensive testing of the ROI calculator backend API. Will test all endpoints and validation scenarios."
