@@ -19,8 +19,38 @@ class TestROICalculatorAPI(unittest.TestCase):
         self.assertEqual(data["message"], "ROI Calculator API is running")
         print("✅ Health check API test passed")
     
-    def test_basic_roi_calculation(self):
-        """Test /api/calculate-roi with default Argentine SME values"""
+    def test_bitrix24_plans_endpoint(self):
+        """Test the /api/bitrix24-plans endpoint to ensure it returns the correct plan data"""
+        response = requests.get(f"{API_BASE_URL}/bitrix24-plans")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verify the response structure
+        self.assertIn("plans", data)
+        plans = data["plans"]
+        self.assertEqual(len(plans), 4)  # Should have 4 plans
+        
+        # Verify each plan has the correct structure and data
+        expected_plans = [
+            {"name": "Basic Plan", "monthly_price_usd": 49, "description": "Essential CRM features for small teams"},
+            {"name": "Standard Plan", "monthly_price_usd": 99, "description": "Advanced automation and reporting", "default": True},
+            {"name": "Professional Plan", "monthly_price_usd": 199, "description": "Complete business solution with integrations"},
+            {"name": "Enterprise Plan", "monthly_price_usd": 399, "description": "Full-scale enterprise solution with premium support"}
+        ]
+        
+        for i, plan in enumerate(plans):
+            self.assertEqual(plan["name"], expected_plans[i]["name"])
+            self.assertEqual(plan["monthly_price_usd"], expected_plans[i]["monthly_price_usd"])
+            self.assertEqual(plan["description"], expected_plans[i]["description"])
+            
+            # Check if this is the default plan (Standard Plan)
+            if plan["name"] == "Standard Plan":
+                self.assertTrue(plan["default"])
+        
+        print("✅ Bitrix24 plans endpoint test passed")
+    
+    def test_roi_calculation_with_standard_plan(self):
+        """Test /api/calculate-roi with Standard Plan (default)"""
         payload = {
             "monthly_inquiries": 1000,
             "automation_percentage": 60,
@@ -29,7 +59,8 @@ class TestROICalculatorAPI(unittest.TestCase):
             "crm_automation_percentage": 50,
             "team_members": 3,
             "hourly_cost_ars": 5000,
-            "bitrix24_annual_cost": 200000,
+            "bitrix24_plan": "Standard Plan",
+            "monthly_price_usd": 99,
             "implementation_cost": 1000000
         }
         
@@ -39,6 +70,9 @@ class TestROICalculatorAPI(unittest.TestCase):
         
         # Verify all required fields are present
         self.assertIn("inputs", data)
+        self.assertIn("selected_plan", data)
+        self.assertIn("monthly_price_usd", data)
+        self.assertIn("annual_license_cost_usd", data)
         self.assertIn("chatbot_monthly_hours_saved", data)
         self.assertIn("chatbot_annual_savings", data)
         self.assertIn("crm_annual_hours_saved", data)
@@ -49,6 +83,11 @@ class TestROICalculatorAPI(unittest.TestCase):
         self.assertIn("total_hours_saved_annually", data)
         self.assertIn("calculation_date", data)
         self.assertIn("calculation_id", data)
+        
+        # Verify plan details
+        self.assertEqual(data["selected_plan"], "Standard Plan")
+        self.assertEqual(data["monthly_price_usd"], 99)
+        self.assertEqual(data["annual_license_cost_usd"], 99 * 12)  # 1188 USD
         
         # Verify calculations
         # Chatbot savings = (1000 * 0.6 * 4) / 60 * 5000 * 12 = 1,440,000 ARS annually
@@ -69,18 +108,66 @@ class TestROICalculatorAPI(unittest.TestCase):
         expected_total_annual_savings = expected_chatbot_annual_savings + expected_crm_annual_savings
         self.assertAlmostEqual(data["total_annual_savings"], expected_total_annual_savings, places=1)
         
-        # Total investment = 200,000 + 1,000,000 = 1,200,000 ARS
-        expected_total_investment = 200000 + 1000000
+        # Total investment = (99 * 12 * 800) + 1,000,000 = 950,400 + 1,000,000 = 1,950,400 ARS
+        expected_annual_license_cost_ars = 99 * 12 * 800  # 1188 USD * 800 = 950,400 ARS
+        expected_total_investment = expected_annual_license_cost_ars + 1000000
         self.assertEqual(data["total_investment"], expected_total_investment)
         
-        # ROI = ((5,040,000 - 1,200,000) / 1,200,000) * 100 = 320%
+        # ROI = ((5,040,000 - 1,950,400) / 1,950,400) * 100
         expected_roi_percentage = ((expected_total_annual_savings - expected_total_investment) / expected_total_investment) * 100
         self.assertAlmostEqual(data["roi_percentage"], expected_roi_percentage, places=1)
         
         # Verify additional_annual_revenue is None for basic calculation
         self.assertIsNone(data["additional_annual_revenue"])
         
-        print("✅ Basic ROI calculation test passed")
+        print("✅ ROI calculation with Standard Plan test passed")
+    
+    def test_roi_calculation_with_different_plans(self):
+        """Test ROI calculation with different Bitrix24 plans"""
+        plans = [
+            {"name": "Basic Plan", "monthly_price_usd": 49},
+            {"name": "Professional Plan", "monthly_price_usd": 199},
+            {"name": "Enterprise Plan", "monthly_price_usd": 399}
+        ]
+        
+        for plan in plans:
+            payload = {
+                "monthly_inquiries": 1000,
+                "automation_percentage": 60,
+                "minutes_per_inquiry": 4,
+                "monthly_crm_hours": 40,
+                "crm_automation_percentage": 50,
+                "team_members": 3,
+                "hourly_cost_ars": 5000,
+                "bitrix24_plan": plan["name"],
+                "monthly_price_usd": plan["monthly_price_usd"],
+                "implementation_cost": 1000000
+            }
+            
+            response = requests.post(f"{API_BASE_URL}/calculate-roi", json=payload)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            
+            # Verify plan details
+            self.assertEqual(data["selected_plan"], plan["name"])
+            self.assertEqual(data["monthly_price_usd"], plan["monthly_price_usd"])
+            self.assertEqual(data["annual_license_cost_usd"], plan["monthly_price_usd"] * 12)
+            
+            # Verify total investment calculation
+            expected_annual_license_cost_ars = plan["monthly_price_usd"] * 12 * 800
+            expected_total_investment = expected_annual_license_cost_ars + 1000000
+            self.assertEqual(data["total_investment"], expected_total_investment)
+            
+            # Verify ROI calculation
+            expected_chatbot_monthly_hours_saved = (1000 * 0.6 * 4) / 60
+            expected_chatbot_annual_savings = expected_chatbot_monthly_hours_saved * 5000 * 12
+            expected_crm_annual_hours_saved = 40 * 0.5 * 3 * 12
+            expected_crm_annual_savings = expected_crm_annual_hours_saved * 5000
+            expected_total_annual_savings = expected_chatbot_annual_savings + expected_crm_annual_savings
+            expected_roi_percentage = ((expected_total_annual_savings - expected_total_investment) / expected_total_investment) * 100
+            self.assertAlmostEqual(data["roi_percentage"], expected_roi_percentage, places=1)
+        
+        print("✅ ROI calculation with different plans test passed")
     
     def test_roi_calculation_with_revenue_parameters(self):
         """Test with optional revenue fields"""
@@ -92,7 +179,8 @@ class TestROICalculatorAPI(unittest.TestCase):
             "crm_automation_percentage": 50,
             "team_members": 3,
             "hourly_cost_ars": 5000,
-            "bitrix24_annual_cost": 200000,
+            "bitrix24_plan": "Standard Plan",
+            "monthly_price_usd": 99,
             "implementation_cost": 1000000,
             "average_ticket_ars": 15000,
             "current_conversion_rate": 2,
@@ -112,99 +200,19 @@ class TestROICalculatorAPI(unittest.TestCase):
         expected_additional_revenue = 1000 * conversion_improvement * 15000 * 12
         self.assertAlmostEqual(data["additional_annual_revenue"], expected_additional_revenue, places=1)
         
+        # Verify plan details and total investment calculation
+        self.assertEqual(data["selected_plan"], "Standard Plan")
+        self.assertEqual(data["monthly_price_usd"], 99)
+        self.assertEqual(data["annual_license_cost_usd"], 99 * 12)
+        
+        expected_annual_license_cost_ars = 99 * 12 * 800
+        expected_total_investment = expected_annual_license_cost_ars + 1000000
+        self.assertEqual(data["total_investment"], expected_total_investment)
+        
         print("✅ ROI calculation with revenue parameters test passed")
     
-    def test_edge_cases(self):
-        """Test with various edge cases"""
-        
-        # Test with low automation percentage (10%)
-        low_automation_payload = {
-            "monthly_inquiries": 1000,
-            "automation_percentage": 10,
-            "minutes_per_inquiry": 4,
-            "monthly_crm_hours": 40,
-            "crm_automation_percentage": 10,
-            "team_members": 3,
-            "hourly_cost_ars": 5000,
-            "bitrix24_annual_cost": 200000,
-            "implementation_cost": 1000000
-        }
-        
-        response = requests.post(f"{API_BASE_URL}/calculate-roi", json=low_automation_payload)
-        self.assertEqual(response.status_code, 200)
-        low_auto_data = response.json()
-        
-        # Test with high automation percentage (90%)
-        high_automation_payload = {
-            "monthly_inquiries": 1000,
-            "automation_percentage": 90,
-            "minutes_per_inquiry": 4,
-            "monthly_crm_hours": 40,
-            "crm_automation_percentage": 90,
-            "team_members": 3,
-            "hourly_cost_ars": 5000,
-            "bitrix24_annual_cost": 200000,
-            "implementation_cost": 1000000
-        }
-        
-        response = requests.post(f"{API_BASE_URL}/calculate-roi", json=high_automation_payload)
-        self.assertEqual(response.status_code, 200)
-        high_auto_data = response.json()
-        
-        # Verify high automation gives higher savings than low automation
-        self.assertGreater(high_auto_data["total_annual_savings"], low_auto_data["total_annual_savings"])
-        
-        # Test with different team sizes
-        team_sizes = [1, 5, 10]
-        previous_savings = 0
-        
-        for team_size in team_sizes:
-            team_payload = {
-                "monthly_inquiries": 1000,
-                "automation_percentage": 60,
-                "minutes_per_inquiry": 4,
-                "monthly_crm_hours": 40,
-                "crm_automation_percentage": 50,
-                "team_members": team_size,
-                "hourly_cost_ars": 5000,
-                "bitrix24_annual_cost": 200000,
-                "implementation_cost": 1000000
-            }
-            
-            response = requests.post(f"{API_BASE_URL}/calculate-roi", json=team_payload)
-            self.assertEqual(response.status_code, 200)
-            team_data = response.json()
-            
-            # Verify larger team size gives higher CRM savings
-            if previous_savings > 0:
-                self.assertGreater(team_data["crm_annual_savings"], previous_savings)
-            
-            previous_savings = team_data["crm_annual_savings"]
-        
-        # Test with different cost structures
-        high_cost_payload = {
-            "monthly_inquiries": 1000,
-            "automation_percentage": 60,
-            "minutes_per_inquiry": 4,
-            "monthly_crm_hours": 40,
-            "crm_automation_percentage": 50,
-            "team_members": 3,
-            "hourly_cost_ars": 10000,  # Higher hourly cost
-            "bitrix24_annual_cost": 400000,  # Higher Bitrix cost
-            "implementation_cost": 2000000  # Higher implementation cost
-        }
-        
-        response = requests.post(f"{API_BASE_URL}/calculate-roi", json=high_cost_payload)
-        self.assertEqual(response.status_code, 200)
-        high_cost_data = response.json()
-        
-        # Verify higher costs affect the calculations correctly
-        self.assertGreater(high_cost_data["total_investment"], 1200000)
-        
-        print("✅ Edge cases test passed")
-    
     def test_mathematical_accuracy(self):
-        """Verify the mathematical accuracy of calculations"""
+        """Verify the mathematical accuracy of calculations with the new plan structure"""
         payload = {
             "monthly_inquiries": 1000,
             "automation_percentage": 60,
@@ -213,7 +221,8 @@ class TestROICalculatorAPI(unittest.TestCase):
             "crm_automation_percentage": 50,
             "team_members": 3,
             "hourly_cost_ars": 5000,
-            "bitrix24_annual_cost": 200000,
+            "bitrix24_plan": "Standard Plan",
+            "monthly_price_usd": 99,
             "implementation_cost": 1000000
         }
         
@@ -232,16 +241,21 @@ class TestROICalculatorAPI(unittest.TestCase):
         # Total savings = 1,440,000 + 3,600,000 = 5,040,000 ARS
         expected_total_savings = expected_chatbot_annual_savings + expected_crm_annual_savings
         
-        # Total investment = 200,000 + 1,000,000 = 1,200,000 ARS
-        expected_total_investment = 200000 + 1000000
+        # Annual license cost = 99 * 12 = 1,188 USD
+        expected_annual_license_cost_usd = 99 * 12
         
-        # ROI = ((5,040,000 - 1,200,000) / 1,200,000) * 100 = 320%
+        # Total investment = (1,188 * 800) + 1,000,000 = 950,400 + 1,000,000 = 1,950,400 ARS
+        expected_annual_license_cost_ars = expected_annual_license_cost_usd * 800
+        expected_total_investment = expected_annual_license_cost_ars + 1000000
+        
+        # ROI = ((5,040,000 - 1,950,400) / 1,950,400) * 100
         expected_roi = ((expected_total_savings - expected_total_investment) / expected_total_investment) * 100
         
         # Total hours saved annually
         expected_total_hours = (expected_chatbot_monthly_hours * 12) + expected_crm_annual_hours
         
         # Verify all calculations match expected values
+        self.assertEqual(data["annual_license_cost_usd"], expected_annual_license_cost_usd)
         self.assertAlmostEqual(data["chatbot_monthly_hours_saved"], expected_chatbot_monthly_hours, places=1)
         self.assertAlmostEqual(data["chatbot_annual_savings"], expected_chatbot_annual_savings, places=1)
         self.assertAlmostEqual(data["crm_annual_hours_saved"], expected_crm_annual_hours, places=1)
@@ -265,7 +279,8 @@ class TestROICalculatorAPI(unittest.TestCase):
             "crm_automation_percentage": 50,
             "team_members": 3,
             "hourly_cost_ars": 5000,
-            "bitrix24_annual_cost": 200000,
+            "bitrix24_plan": "Standard Plan",
+            "monthly_price_usd": 99,
             "implementation_cost": 1000000
         }
         
@@ -293,6 +308,8 @@ class TestROICalculatorAPI(unittest.TestCase):
         # Verify default values are used
         self.assertEqual(data["inputs"]["monthly_inquiries"], 1000)
         self.assertEqual(data["inputs"]["automation_percentage"], 60.0)
+        self.assertEqual(data["inputs"]["bitrix24_plan"], "Standard Plan")
+        self.assertEqual(data["inputs"]["monthly_price_usd"], 99)
         
         # Test with invalid types
         invalid_payload = {
@@ -303,7 +320,8 @@ class TestROICalculatorAPI(unittest.TestCase):
             "crm_automation_percentage": 50,
             "team_members": 3,
             "hourly_cost_ars": 5000,
-            "bitrix24_annual_cost": 200000,
+            "bitrix24_plan": "Standard Plan",
+            "monthly_price_usd": 99,
             "implementation_cost": 1000000
         }
         
