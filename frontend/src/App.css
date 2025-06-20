@@ -1,38 +1,157 @@
-.App {
-    text-align: center;
+/* Custom styles for ROI Calculator */
+
+/* Efficiency24 Brand Colors */
+:root {
+  --primary-blue: #007bff;
+  --primary-blue-hover: #0056b3;
+  --light-gray: #f8f9fa;
+  --medium-gray: #6c757d;
+  --dark-gray: #343a40;
 }
 
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Input field focus states */
+.focus\:ring-blue-500:focus {
+  --tw-ring-color: var(--primary-blue);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Button hover states */
+.hover\:bg-blue-700:hover {
+  background-color: var(--primary-blue-hover);
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.bg-blue-600 {
+  background-color: var(--primary-blue);
 }
 
-.App-link {
-    color: #61dafb;
+/* Professional animations */
+.transition-colors {
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Input number styling */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Card hover effects */
+.shadow-lg {
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.shadow-lg:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Responsive grid improvements */
+@media (max-width: 640px) {
+  .grid-cols-1.sm\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-1.sm\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Professional form styling */
+.form-section {
+  border-left: 4px solid var(--primary-blue);
+  padding-left: 1rem;
+}
+
+/* Results card gradients */
+.gradient-blue {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #0056b3 100%);
+}
+
+/* Professional typography */
+.text-corporate {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Status indicators */
+.status-positive {
+  color: #22c55e;
+  background-color: #f0fdf4;
+}
+
+.status-negative {
+  color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.status-neutral {
+  color: #6b7280;
+  background-color: #f9fafb;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .container-mobile {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .text-mobile-sm {
+    font-size: 0.875rem;
+  }
+  
+  .grid-mobile-1 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Print styles for future PDF export */
+@media print {
+  .no-print {
+    display: none;
+  }
+  
+  .print-break {
+    page-break-before: always;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
 }
