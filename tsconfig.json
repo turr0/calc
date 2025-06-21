@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["esnext", "dom"],
+    "jsx": "react-jsx", // esbuild with --jsx=automatic uses this transform
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true, // Recommended for TS with bundlers like esbuild
+    "outDir": "./dist_ts_check", // Output directory for type checking, not for actual bundle
+    "types": [
+      "@cloudflare/workers-types",
+      "node" // For process.env in worker context if needed
+    ],
+    "baseUrl": ".",
+    "paths": {
+      // Paths might not be strictly needed if module resolution works fine
+      // "react": ["./node_modules/react"],
+      // "react-dom/*": ["./node_modules/react-dom/*"],
+      // "@google/genai": ["./node_modules/@google/genai"]
+    }
+  },
+  "include": [
+    "worker/**/*.ts",
+    "public/**/*.ts",
+    "public/**/*.tsx"
+  ],
+  "exclude": ["node_modules", "dist", "public/bundle.js"]
+}
