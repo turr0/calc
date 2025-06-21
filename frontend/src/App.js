@@ -26,8 +26,15 @@ const App = () => {
     expected_conversion_rate: ''
   });
 
+  const [emailData, setEmailData] = useState({
+    user_email: '',
+    company_name: ''
+  });
+
   const [results, setResults] = useState(null);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleInputChange = (e) => {
@@ -35,6 +42,14 @@ const App = () => {
     setFormData(prev => ({
       ...prev,
       [name]: value === '' ? '' : Number(value)
+    }));
+  };
+
+  const handleEmailChange = (e) => {
+    const { name, value } = e.target;
+    setEmailData(prev => ({
+      ...prev,
+      [name]: value
     }));
   };
 
@@ -76,16 +91,29 @@ const App = () => {
     }).format(hours);
   };
 
-  const calculateROI = async () => {
-    setLoading(true);
+  const handleCalculateClick = () => {
+    setShowEmailForm(true);
+    setError(null);
+  };
+
+  const submitEmailAndCalculate = async (e) => {
+    e.preventDefault();
+    
+    if (!emailData.user_email) {
+      setError('Por favor ingrese su email para continuar');
+      return;
+    }
+
+    setEmailLoading(true);
     setError(null);
     
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
       
-      // Prepare data, converting empty strings to null for optional fields
+      // Prepare data for calculation
       const requestData = {
         ...formData,
+        ...emailData,
         average_ticket_ars: formData.average_ticket_ars === '' ? null : formData.average_ticket_ars,
         current_conversion_rate: formData.current_conversion_rate === '' ? null : formData.current_conversion_rate,
         expected_conversion_rate: formData.expected_conversion_rate === '' ? null : formData.expected_conversion_rate
@@ -105,11 +133,12 @@ const App = () => {
 
       const data = await response.json();
       setResults(data);
+      setShowEmailForm(false);
     } catch (err) {
       setError(`Error al calcular ROI: ${err.message}`);
       console.error('Calculation error:', err);
     } finally {
-      setLoading(false);
+      setEmailLoading(false);
     }
   };
 
@@ -454,11 +483,11 @@ const App = () => {
             </div>
 
             <button
-              onClick={calculateROI}
-              disabled={loading}
+              onClick={handleCalculateClick}
+              disabled={loading || emailLoading}
               className="w-full mt-8 bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Calculando...' : 'Calcular ROI'}
+              {loading || emailLoading ? 'Procesando...' : 'Calcular ROI'}
             </button>
 
             {error && (
@@ -468,127 +497,188 @@ const App = () => {
             )}
           </div>
 
-          {/* Results */}
+          {/* Results or Email Form */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Resultados del Análisis ROI
-            </h2>
-            
-            {!results ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <p className="text-gray-500">
-                  Complete los parámetros y haga clic en "Calcular ROI" para ver los resultados.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Plan Selection Summary */}
-                <div className="bg-indigo-50 rounded-lg p-4">
-                  <h4 className="font-medium text-indigo-900 mb-2">Plan Bitrix24 Seleccionado</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                    <div>
-                      <span className="text-indigo-700 font-medium">{results.selected_plan}</span>
+            {!showEmailForm ? (
+              <>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Resultados del Análisis ROI
+                </h2>
+                
+                {!results ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
                     </div>
-                    <div>
-                      <span className="text-indigo-600">Mensual: {formatUSD(results.monthly_price_usd)}</span>
-                    </div>
-                    <div>
-                      <span className="text-indigo-600">Anual: {formatUSD(results.annual_license_cost_usd)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ROI Summary */}
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
-                  <div className="text-center">
-                    <h3 className="text-lg font-medium mb-2">ROI Proyectado</h3>
-                    <div className="text-4xl font-bold mb-2">
-                      {results.roi_percentage > 0 ? '+' : ''}{results.roi_percentage}%
-                    </div>
-                    <p className="text-blue-100">Retorno sobre la inversión anual</p>
-                  </div>
-                </div>
-
-                {/* Key Metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-green-50 rounded-lg p-4">
-                    <h4 className="font-medium text-green-900 mb-2">Ahorro Total Anual</h4>
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(results.total_annual_savings)}
-                    </div>
-                  </div>
-                  
-                  <div className="bg-red-50 rounded-lg p-4">
-                    <h4 className="font-medium text-red-900 mb-2">Inversión Total</h4>
-                    <div className="text-2xl font-bold text-red-600">
-                      {formatCurrency(results.total_investment)}
-                    </div>
-                    <div className="text-sm text-red-700 mt-1">
-                      Implementación + Licencia anual ({formatUSD(results.annual_license_cost_usd)})
-                    </div>
-                  </div>
-                </div>
-
-                {/* Detailed Breakdown */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Desglose de Ahorros</h4>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-700">Ahorro por Chatbot</span>
-                      <span className="font-medium">{formatCurrency(results.chatbot_annual_savings)}</span>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {formatHours(results.chatbot_monthly_hours_saved * 12)} horas anuales
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-700">Ahorro por CRM</span>
-                      <span className="font-medium">{formatCurrency(results.crm_annual_savings)}</span>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {formatHours(results.crm_annual_hours_saved)} horas anuales
-                    </div>
-                  </div>
-                </div>
-
-                {/* Revenue Impact */}
-                {results.additional_annual_revenue && (
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-900 mb-2">Ingresos Adicionales Estimados</h4>
-                    <div className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(results.additional_annual_revenue)}
-                    </div>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Por mejora en tasa de conversión
+                    <p className="text-gray-500">
+                      Complete los parámetros y haga clic en "Calcular ROI" para ver los resultados.
                     </p>
                   </div>
-                )}
-
-                {/* Summary Stats */}
-                <div className="border-t pt-4">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        {formatHours(results.total_hours_saved_annually)}
+                ) : (
+                  <div className="space-y-6">
+                    {/* Success Message */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <div>
+                          <p className="text-green-800 font-medium">¡Análisis completado exitosamente!</p>
+                          <p className="text-green-700 text-sm">
+                            Su análisis ROI detallado ha sido enviado a <strong>{results.user_email}</strong>
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">Horas ahorradas/año</div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        {Math.max(1, Math.round(results.total_investment / Math.max(1, results.total_annual_savings) * 12))}
+
+                    {/* Plan Selection Summary */}
+                    <div className="bg-indigo-50 rounded-lg p-4">
+                      <h4 className="font-medium text-indigo-900 mb-2">Plan Bitrix24 Seleccionado</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <span className="text-indigo-700 font-medium">{results.selected_plan}</span>
+                        </div>
+                        <div>
+                          <span className="text-indigo-600">Mensual: {formatUSD(results.monthly_price_usd)}</span>
+                        </div>
+                        <div>
+                          <span className="text-indigo-600">Anual: {formatUSD(results.annual_license_cost_usd)}</span>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">Meses para recuperar inversión</div>
+                    </div>
+
+                    {/* ROI Summary */}
+                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                      <div className="text-center">
+                        <h3 className="text-lg font-medium mb-2">ROI Proyectado</h3>
+                        <div className="text-4xl font-bold mb-2">
+                          {results.roi_percentage > 0 ? '+' : ''}{results.roi_percentage}%
+                        </div>
+                        <p className="text-blue-100">Retorno sobre la inversión anual</p>
+                      </div>
+                    </div>
+
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-green-50 rounded-lg p-4">
+                        <h4 className="font-medium text-green-900 mb-2">Ahorro Total Anual</h4>
+                        <div className="text-2xl font-bold text-green-600">
+                          {formatCurrency(results.total_annual_savings)}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-red-50 rounded-lg p-4">
+                        <h4 className="font-medium text-red-900 mb-2">Inversión Total</h4>
+                        <div className="text-2xl font-bold text-red-600">
+                          {formatCurrency(results.total_investment)}
+                        </div>
+                        <div className="text-sm text-red-700 mt-1">
+                          Implementación + Licencia anual ({formatUSD(results.annual_license_cost_usd)})
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Summary Stats */}
+                    <div className="border-t pt-4">
+                      <div className="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                          <div className="text-2xl font-bold text-gray-900">
+                            {formatHours(results.total_hours_saved_annually)}
+                          </div>
+                          <div className="text-sm text-gray-600">Horas ahorradas/año</div>
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-gray-900">
+                            {Math.max(1, Math.round(results.total_investment / Math.max(1, results.total_annual_savings) * 12))}
+                          </div>
+                          <div className="text-sm text-gray-600">Meses para recuperar inversión</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact Message */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="text-center">
+                        <h4 className="font-medium text-blue-900 mb-2">¿Listo para el siguiente paso?</h4>
+                        <p className="text-blue-800 text-sm">
+                          Nuestro equipo se pondrá en contacto contigo para analizar estos resultados y ayudarte a implementar la solución perfecta para tu PyME.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Email Capture Form */
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Ingrese sus datos para ver los resultados
+                </h2>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-blue-800 font-medium">Análisis ROI personalizado</p>
+                      <p className="text-blue-700 text-sm mt-1">
+                        Recibirá un reporte detallado en su email con el análisis completo de ROI, 
+                        desglose de ahorros y recomendaciones personalizadas.
+                      </p>
                     </div>
                   </div>
                 </div>
+
+                <form onSubmit={submitEmailAndCalculate} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email corporativo *
+                    </label>
+                    <input
+                      type="email"
+                      name="user_email"
+                      value={emailData.user_email}
+                      onChange={handleEmailChange}
+                      required
+                      placeholder="ejemplo@empresa.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre de la empresa (opcional)
+                    </label>
+                    <input
+                      type="text"
+                      name="company_name"
+                      value={emailData.company_name}
+                      onChange={handleEmailChange}
+                      placeholder="Su empresa"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmailForm(false)}
+                      className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+                    >
+                      Volver
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={emailLoading}
+                      className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {emailLoading ? 'Enviando...' : 'Ver Resultados'}
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
           </div>
