@@ -137,6 +137,118 @@ const App = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Information Section */}
+        <div className="mb-12">
+          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 border-l-4 border-blue-500">
+            <div className="max-w-6xl mx-auto">
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 text-center">
+                Ahorros de Tiempo Basados en Estudios de la Industria
+              </h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                {/* Chatbot Section */}
+                <div className="bg-blue-50 rounded-lg p-4 md:p-6 border border-blue-100">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 rounded-lg flex items-center justify-center mr-3 md:mr-4 flex-shrink-0">
+                      <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg md:text-xl font-semibold text-blue-900">
+                      Reducción de Tiempo con Chatbot
+                    </h4>
+                  </div>
+                  
+                  <div className="space-y-3 text-blue-800">
+                    <p className="flex items-start">
+                      <span className="inline-block w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>Los chatbots automatizan típicamente <strong>60% a 80%</strong> de las consultas de clientes</span>
+                    </p>
+                    <p className="flex items-start">
+                      <span className="inline-block w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>Ahorro promedio de <strong>3 a 5 minutos por consulta</strong></span>
+                    </p>
+                    <p className="flex items-start">
+                      <span className="inline-block w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>Resultado: <strong>cientos de horas ahorradas por año</strong> para PyMEs</span>
+                    </p>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-100 rounded-md">
+                    <p className="text-sm text-blue-700">
+                      <strong>Fuente:</strong> Estudios de IBM e Intercom sobre automatización de atención al cliente
+                    </p>
+                  </div>
+                </div>
+
+                {/* CRM Section */}
+                <div className="bg-green-50 rounded-lg p-4 md:p-6 border border-green-100">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-green-600 rounded-lg flex items-center justify-center mr-3 md:mr-4 flex-shrink-0">
+                      <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg md:text-xl font-semibold text-green-900">
+                      Reducción de Tiempo con Bitrix24 CRM
+                    </h4>
+                  </div>
+                  
+                  <div className="space-y-3 text-green-800">
+                    <p className="flex items-start">
+                      <span className="inline-block w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>Automatiza tareas administrativas, de ventas y soporte</span>
+                    </p>
+                    <p className="flex items-start">
+                      <span className="inline-block w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>Reduce la carga manual en <strong>30% a 50%</strong> en promedio</span>
+                    </p>
+                    <p className="flex items-start">
+                      <span className="inline-block w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>Mejora significativa en seguimiento y reportes automáticos</span>
+                    </p>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-green-100 rounded-md">
+                    <p className="text-sm text-green-700">
+                      <strong>Fuente:</strong> Nucleus Research - Estudios sobre ROI de sistemas CRM
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Context */}
+              <div className="mt-6 md:mt-8 bg-gray-50 rounded-lg p-4 md:p-6 border border-gray-200">
+                <div className="text-center">
+                  <h5 className="text-lg font-semibold text-gray-900 mb-3">
+                    ¿Por Qué Estos Datos Son Importantes?
+                  </h5>
+                  <p className="text-gray-700 leading-relaxed max-w-4xl mx-auto text-sm md:text-base">
+                    Esta calculadora utiliza datos reales de estudios industriales para proyectar ahorros realistas. 
+                    Los valores por defecto están basados en promedios de PyMEs argentinas que han implementado 
+                    soluciones similares, proporcionando estimaciones conservadoras y alcanzables para su organización.
+                  </p>
+                </div>
+                
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+                    <div className="text-xl md:text-2xl font-bold text-blue-600 mb-1">60-80%</div>
+                    <div className="text-xs md:text-sm text-gray-600">Consultas automatizables</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+                    <div className="text-xl md:text-2xl font-bold text-green-600 mb-1">30-50%</div>
+                    <div className="text-xs md:text-sm text-gray-600">Reducción carga CRM</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+                    <div className="text-xl md:text-2xl font-bold text-purple-600 mb-1">3-5 min</div>
+                    <div className="text-xs md:text-sm text-gray-600">Ahorro por consulta</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Form */}
           <div className="bg-white rounded-xl shadow-lg p-6">
